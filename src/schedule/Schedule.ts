@@ -127,9 +127,7 @@ export class Schedule extends LogEmitter {
    * Jobs can be started again using start().
    */
   public async stop(): Promise<void> {
-    this.logger.debug('stop all jobs', {
-      count: this.count(),
-    });
+    this.logger.debug('stop all jobs', { count: this.count() });
     await Promise.all(Object.values(this.jobSchedulers).map((jobScheduler) => jobScheduler.stop()));
   }
 

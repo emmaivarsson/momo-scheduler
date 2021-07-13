@@ -17,7 +17,7 @@ export class JobScheduler {
   private jobHandle?: TimeoutHandle;
   private unexpectedErrorCount = 0;
   private interval?: string;
-  private pendingExecutions: Promise<any>[] = [];
+  private pendingExecutions: Promise<void | JobResult>[] = [];
 
   constructor(
     private readonly jobName: string,
@@ -147,9 +147,7 @@ export class JobScheduler {
       for (let i = 0; i < numToExecute; i++) {
         const pendingExecution = this.jobExecutor
           .execute(jobEntity)
-          .catch((e) => {
-            this.handleUnexpectedError(e);
-          })
+          .catch(this.handleUnexpectedError)
           .finally(() => {
             const index = this.pendingExecutions.indexOf(pendingExecution);
             if (index > -1) {
