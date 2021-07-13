@@ -466,6 +466,7 @@ describe('schedule', () => {
       await mongoSchedule.stop();
 
       expect(jobHandler.count).toBe(1);
+      expect((await jobRepository.findOne({ name: job.name }))?.running).toBe(0);
     });
 
     it('executes a long running job', async () => {
@@ -564,9 +565,8 @@ describe('schedule', () => {
 
       await jobRepository.clear();
 
-      await waitFor(async () => {
-        expect(await jobRepository.find({ name: job.name })).toHaveLength(0);
-      }, jobHandler.duration);
+      await sleep(jobHandler.duration);
+      expect(await jobRepository.find({ name: job.name })).toHaveLength(0);
     });
 
     it('reports error when job is removed from mongo between scheduling and executing it', async () => {

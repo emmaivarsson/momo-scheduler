@@ -17,7 +17,7 @@ export class JobScheduler {
   private jobHandle?: TimeoutHandle;
   private unexpectedErrorCount = 0;
   private interval?: string;
-  private pendingPromises: Promise<any>[] = [];
+  private pendingExecutions: Promise<any>[] = [];
 
   constructor(
     private readonly jobName: string,
@@ -92,9 +92,12 @@ export class JobScheduler {
       this.jobHandle = undefined;
       this.interval = undefined;
     }
-    if (this.pendingPromises.length > 0) {
-      this.logger.debug('wait for pending jobs to finish', { count: this.pendingPromises.length });
-      await Promise.all(this.pendingPromises);
+    if (this.pendingExecutions.length > 0) {
+      this.logger.debug('wait for pending executions to finish', {
+        name: this.jobName,
+        pending: this.pendingExecutions.length,
+      });
+      await Promise.all(this.pendingExecutions);
     }
   }
 
@@ -142,16 +145,18 @@ export class JobScheduler {
       this.logger.debug('execute job', { name: this.jobName, times: numToExecute });
 
       for (let i = 0; i < numToExecute; i++) {
-        const pendingPromise = this.jobExecutor
+        const pendingExecution = this.jobExecutor
           .execute(jobEntity)
           .catch((e) => {
             this.handleUnexpectedError(e);
           })
           .finally(() => {
-            const index = this.pendingPromises.indexOf(pendingPromise);
-            this.pendingPromises.splice(index, 1);
+            const index = this.pendingExecutions.indexOf(pendingExecution);
+            if (index > -1) {
+              this.pendingExecutions.splice(index, 1);
+            }
           });
-        this.pendingPromises?.push(pendingPromise);
+        this.pendingExecutions?.push(pendingExecution);
       }
     } catch (e) {
       this.handleUnexpectedError(e);
