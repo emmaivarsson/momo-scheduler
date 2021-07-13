@@ -36,7 +36,7 @@ describe('MongoScheduleBuilder', () => {
   });
 
   beforeEach(async () => {
-    mongoSchedule.cancel();
+    await mongoSchedule.cancel();
     await clear();
   });
 

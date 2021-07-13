@@ -52,7 +52,7 @@ export class Schedule extends LogEmitter {
     if (!validate(job, this.logger)) {
       return;
     }
-    this.stopJob(job.name);
+    await this.stopJob(job.name);
 
     await define(job, this.logger);
 
@@ -117,20 +117,20 @@ export class Schedule extends LogEmitter {
    *
    * @param name the job to stop
    */
-  public stopJob(name: string): void {
+  public async stopJob(name: string): Promise<void> {
     this.logger.debug('stop', { name });
-    this.jobSchedulers[name]?.stop();
+    await this.jobSchedulers[name]?.stop();
   }
 
   /**
    * Stops all scheduled jobs without removing them from neither the schedule nor the database.
    * Jobs can be started again using start().
    */
-  public stop(): void {
+  public async stop(): Promise<void> {
     this.logger.debug('stop all jobs', {
       count: this.count(),
     });
-    Object.values(this.jobSchedulers).forEach((jobScheduler) => jobScheduler.stop());
+    await Promise.all(Object.values(this.jobSchedulers).map((jobScheduler) => jobScheduler.stop()));
   }
 
   /**
@@ -139,8 +139,8 @@ export class Schedule extends LogEmitter {
    *
    * @param name the job to cancel
    */
-  public cancelJob(name: string): void {
-    this.stopJob(name);
+  public async cancelJob(name: string): Promise<void> {
+    await this.stopJob(name);
     this.logger.debug('cancel', { name });
     delete this.jobSchedulers[name];
   }
@@ -148,8 +148,8 @@ export class Schedule extends LogEmitter {
   /**
    * Stops all scheduled jobs and removes them from the schedule (but not from the database).
    */
-  public cancel(): void {
-    this.stop();
+  public async cancel(): Promise<void> {
+    await this.stop();
     this.logger.debug('cancel all jobs', { count: Object.keys(this.jobSchedulers).length });
     this.jobSchedulers = {};
   }
@@ -161,7 +161,7 @@ export class Schedule extends LogEmitter {
    * @param name the job to remove
    */
   public async removeJob(name: string): Promise<void> {
-    this.cancelJob(name);
+    await this.cancelJob(name);
     this.logger.debug('remove', { name });
     await getJobRepository().delete({ name });
   }
@@ -171,7 +171,7 @@ export class Schedule extends LogEmitter {
    */
   public async remove(): Promise<void> {
     const names = Object.keys(this.jobSchedulers);
-    this.cancel();
+    await this.cancel();
     this.logger.debug('remove all jobs', { names: names.join(', ') });
     await getJobRepository().deleteMany({ name: { $in: names } });
   }

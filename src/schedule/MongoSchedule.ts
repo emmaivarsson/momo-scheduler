@@ -21,7 +21,7 @@ export class MongoSchedule extends Schedule {
    * Cancels all jobs on the schedule and disconnects the database.
    */
   public async disconnect(): Promise<void> {
-    this.cancel();
+    await this.cancel();
     await disconnect();
   }
 }

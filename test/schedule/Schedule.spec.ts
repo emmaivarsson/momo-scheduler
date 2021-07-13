@@ -26,12 +26,14 @@ describe('Schedule', () => {
     mongoSchedule = await MongoSchedule.connect({
       url: 'mongodb://does.not/matter',
     });
-    mongoSchedule.cancel();
+    await mongoSchedule.cancel();
 
     initLoggingForTests(mongoSchedule);
   });
 
-  afterEach(() => mongoSchedule.stop());
+  afterEach(async () => {
+    await mongoSchedule.stop();
+  });
 
   it('emits logs', async () => {
     let caughtEvent: MomoEvent | undefined;

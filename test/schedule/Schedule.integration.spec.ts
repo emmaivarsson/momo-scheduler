@@ -37,7 +37,7 @@ describe('schedule', () => {
   });
 
   beforeEach(async () => {
-    mongoSchedule.cancel();
+    await mongoSchedule.cancel();
     await clear();
   });
 
@@ -191,7 +191,7 @@ describe('schedule', () => {
 
       await waitFor(() => expect(jobHandler.count).toBe(1));
 
-      mongoSchedule.stop();
+      await mongoSchedule.stop();
 
       await sleep(1100);
       expect(jobHandler.count).toBe(1);
@@ -295,7 +295,7 @@ describe('schedule', () => {
       expect(jobHandler1.count).toBe(2);
       expect(jobHandler2.count).toBe(3);
 
-      mongoSchedule.stop();
+      await mongoSchedule.stop();
 
       await sleep(2500);
       expect(jobHandler1.count).toBe(2);
@@ -329,7 +329,7 @@ describe('schedule', () => {
         expect(jobHandler2.count).toBe(1);
       });
 
-      mongoSchedule.stopJob(job1.name);
+      await mongoSchedule.stopJob(job1.name);
 
       await sleep(1500);
       expect(jobHandler1.count).toBe(1);
@@ -373,7 +373,7 @@ describe('schedule', () => {
         expect(jobHandler2.count).toBe(1);
       });
 
-      mongoSchedule.cancelJob(job1.name);
+      await mongoSchedule.cancelJob(job1.name);
 
       await sleep(1500);
       expect(jobHandler1.count).toBe(1);
@@ -401,7 +401,7 @@ describe('schedule', () => {
         expect(jobHandler2.count).toBe(1);
       });
 
-      mongoSchedule.stop();
+      await mongoSchedule.stop();
 
       await sleep(1500);
       expect(jobHandler1.count).toBe(1);
@@ -418,7 +418,7 @@ describe('schedule', () => {
         expect(jobHandler2.count).toBe(1);
       });
 
-      mongoSchedule.cancel();
+      await mongoSchedule.cancel();
 
       await sleep(1500);
       expect(jobHandler1.count).toBe(1);
@@ -458,6 +458,16 @@ describe('schedule', () => {
       job = createTestJob(jobHandler);
     });
 
+    it('awaits pending job when stopped', async () => {
+      await mongoSchedule.define(job);
+      await mongoSchedule.start();
+
+      await sleep(1100);
+      await mongoSchedule.stop();
+
+      expect(jobHandler.count).toBe(1);
+    });
+
     it('executes a long running job', async () => {
       await mongoSchedule.define(job);
 
@@ -484,7 +494,7 @@ describe('schedule', () => {
       await mongoSchedule.start();
       await waitFor(() => expect(jobHandler.count).toBe(1), jobHandler.duration + 1000);
 
-      mongoSchedule.stop();
+      await mongoSchedule.stop();
 
       await sleep(jobHandler.duration);
       expect(jobHandler.count).toBe(1);
@@ -503,7 +513,7 @@ describe('schedule', () => {
       const [{ running: runningAfter3Sec }] = await jobRepository.find({ name: job.name });
       expect(runningAfter3Sec).toBe(2);
 
-      mongoSchedule.stop();
+      await mongoSchedule.stop();
 
       await waitFor(() => {
         expect(jobHandler.count).toBe(2);
